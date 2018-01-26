@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+	<title>InfoVis MDS Quiz</title>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<style type="text/css">
+	    /* CSS styles go here... */
+		h2 {
+			font-size: 18px;
+			padding: 0;
+			margin: 0;
+		}
+		line {
+			stroke: grey;
+			stroke-width: 1px;
+		}
+		text {
+			font-family: Times New Roman;
+             font-size: 12px;
+             fill: #000;
+		}
+		circle {
+		 fill: #aaa;
+		}
+	</style>
+</head>
+<body>
+<h2>Sourabh Shetty</h2>
+<h2>Christopher Wakeley</h2>
+
+	<svg width="800" height="600" style="border:1px solid grey"></svg>
+
+<script type="text/javascript">
+var svg = d3.select("svg");
+var graph, forces;
+
+d3.csv("http://sourabh.io/infovis/InfoVis-Fall-2017-clean.csv", function(data) {
+	graph = TableToGraph(data);  // See docs below about graph contents
+	console.log(graph);  // see graph contents in browser console 
+
+	// Set up the D3 Force layout.  
+	// Simulation will compute 2D locations of vertices as graph.vertices[i].x and .y 
+	forces = d3.forceSimulation(graph.vertices)
+		.force("spring", d3.forceLink(graph.edges)
+			// Set various useful properties of the forceLink here...
+    		// Hint: give .distance() an appropriate function.
+					.id( function(v) { return v.index; } )
+					.distance( function (v) { return v.distance * 40; })
+			
+    		)
+		.force("gravity", d3.forceCenter(400, 300))
+		// What other forces would be useful here?
+		.on("tick", ticked);
+
+	function ticked() {
+		// Use D3 here to create/modify DOM objects based on the data...
+		// Visualize students' Name and Born attributes.
+		// Add some interaction.
+		svg.selectAll("circle")
+			.data(graph.vertices)
+				.attr("cx", function(v) { return v.x})
+				.attr("cy", function(v) { return v.y})
+			.enter().append("circle").attr("r", function (v) {
+						//console.log(v.Name + "  " + (v.Born / graph.norms["Born"]) * 10 + "   " + (v.Born / 10000 * 15));
+						var d = (((v.Born - 250) / 9750) * 15 + 5)
+						console.log(d);
+						return d;
+					}
+				)
+				.call(d3.drag()
+				  .on("start", dragstarted)
+				  .on("drag", dragged)
+				  .on("end", dragended));
+		svg.selectAll("text")
+			.data(graph.vertices)
+				.attr("x", function(v) { return v.x})
+				.attr("y", function(v) { return v.y})
+			.enter().append("text")
+				.attr("dx", 5)
+				.attr("dy", ".35em")
+				.text(function(d){return d.Name});
+	}
+	function dragstarted(d) {
+	  if (!d3.event.active) forces.alphaTarget(0.3).restart();
+	  d.fx = d.x;
+	  d.fy = d.y;
+	}
+
+	function dragged(d) {
+	  d.fx = d3.event.x;
+	  d.fy = d3.event.y;
+	}
+
+	function dragended(d) {
+	  if (!d3.event.active) forces.alphaTarget(0);
+	  d.fx = null;
+	  d.fy = null;
+	}
+});
+
+////////////// Completed Code - no need to edit ///////////////
+
+// Create data structure for a complete (all pairs) weighted graph from a csv table.
+// table = array of rows, as read by d3.csv()
+// Returns graph object where:
+//	graph.vertices = table (e.g. array of vertices, each vertex is dict of attr:value pairs from data table)
+//  graph.edges = array of edges, where each edge contains:
+//		edge.source, edge.target = references to vertex objects in graph.vertices
+//		edge.distance = distance(source, target)
+//  graph.attrs = array of attribute names in the table, not including "Name".
+//  graph.norms = dict of normalization factors for each attr, for distance().
+function TableToGraph(table) {
+	var graph = {'vertices':table, 'edges':[], 'norms':{}, 'attrs':Object.keys(table[0])};
+	graph.attrs.splice(0,1);  //remove "Name"
+	// Compute norms for each attribute:
+	graph.attrs.forEach( function(a){ 
+		graph.norms[a] = d3.deviation(table, function(r){return r[a];}) });
+		//graph.norms[a] = d3.max(table, function(r){return r[a];}) });
+	// Compute all-pairs edges as array of {source:ref, target:ref, distance:value}
+	table.forEach( function(src, isrc){
+		table.forEach( function(dst, idst){
+			if(isrc < idst)	 // no duplicate edges
+				graph.edges.push( {'source': src, 'target': dst, 'distance': distance(src,dst,graph.norms)} );
+	}); });
+	return graph;
+}
+// Distance metric, computes normalized high-dimensional distance between 2 rows in the table.
+// r1, r2 = references to row (vertex) objects.
+// norms = the attr normalization factors.
+function distance(r1, r2, norms) {
+	//return Object.keys(norms).reduce( function(sum, a){
+	//		return sum + Math.abs(r1[a] - r2[a])/norms[a];}, 0);  // L1
+	return Math.sqrt( Object.keys(norms).reduce( function(sum, a){
+			return sum + Math.pow((r1[a] - r2[a])/norms[a], 2);}, 0) ); // L2
+}
+</script>
+</body>
+</html>

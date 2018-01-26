@@ -1,0 +1,45 @@
+<!DOCTYPE html> 
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+	<title>D3 Template</title>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<style type="text/css">
+		line {
+			stroke: grey;
+			stroke-width: 1px;
+		}
+	</style>
+</head>
+<body>
+	<svg width="800" height="600" style="border:1px solid black">
+	</svg>
+	
+	<script type="text/javascript">
+		// D3 code can go here ...
+		var svg = d3.select("svg");
+		d3.json("http://sourabh.io/infovis/miserables.json", function (e, graph) {
+			force = d3.forceSimulation(graph.nodes)
+				.force("spring", d3.forceLink(graph.links)
+					.id( function(v) { console.log(v); return v.id; } ) )
+				.force("repel", d3.forceManyBody())
+				.force("gravity", d3.forceCenter(400, 300))
+				.on("tick", ticked);
+			function ticked() {
+				svg.selectAll("line")
+					.data(graph.links)
+						.attr("x1", function (e) { return e.source.x;} )
+						.attr("y1", function (e) { return e.source.y;} )
+						.attr("x2", function (e) { return e.target.x;} )
+						.attr("y2", function (e) { return e.target.y;} )
+					.enter().append("line");
+				svg.selectAll("circle")
+					.data(graph.nodes)
+						.attr("cx", function(v) { return v.x})
+						.attr("cy", function(v) { return v.y})
+					.enter().append("circle").attr("r", 5);
+			}
+		});
+	</script>
+</body>
+</html>

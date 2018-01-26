@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<style>
+.bar {
+fill: steelblue;
+stroke: none;
+}
+.highlight {
+fill: orange;
+}
+#details {
+position: absolute;
+text-align: center;
+width: 100%;
+font-size: 24px;
+margin-top: 10px;
+}
+#svg-graph {
+position: absolute;
+left: 50%;
+transform: translateX(-50%);
+padding: 0 35px;
+}
+</style>
+</head>
+<body>
+<div id="details"></div>
+<svg width="1260" height="600" id="svg-graph" style="border: 1px solid black">
+</svg>
+
+<script type="text/javascript">
+var svg = d3.select("svg");
+var a = [5, 10,13, 29, 45, 7];
+
+d3.csv("http://sourabh.io/infovis/states.csv", function (data) {
+console.log(data);
+svg.selectAll("rect").data(data)
+.enter()
+.append("rect")
+.attr("class", "bar")
+.attr("x", function(d, i) {return i * 25})
+.attr("y", function(d, i) {return svg.attr("height") - d.CollegeGrad * 10})
+.attr("width", 22)
+.attr("height", function(d, i) {return d.CollegeGrad * 50})
+.on("mouseover", function (d, i) {
+	d3.select(this).classed("highlight", true);
+	d3.select("#details").html(d.Name + " " + d.CollegeGrad)
+})
+.on("mouseout", function (d, i) {
+	d3.select(this).classed("highlight", false);
+})
+});
+</script>
+
+</body>
+</html>

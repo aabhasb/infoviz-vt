@@ -1,0 +1,11 @@
+1. Zoom + Pan
+2. Overview + Detail
+3. Focus + Context
+
+
+HW
+
+
+1. Overview
+2. Navigation
+
